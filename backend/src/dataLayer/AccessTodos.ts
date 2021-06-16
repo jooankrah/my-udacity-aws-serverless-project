@@ -19,8 +19,8 @@ export class AccessTodos {
     private readonly todosIndex = process.env.TODOS_INDEX
   ) {}
 
-  async todoItemExists(todoId: string): Promise<boolean> {
-    const item = await this.getTodoItem(todoId)
+  async todoItemExists(userId: string, todoId: string): Promise<boolean> {
+    const item = await this.getTodoItem(userId, todoId)
     return !!item
   }
 
@@ -47,13 +47,14 @@ export class AccessTodos {
     return items as TodoItem[]
   }
 
-  async getTodoItem(todoId: string): Promise<TodoItem> {
+  async getTodoItem(userId: string, todoId: string): Promise<TodoItem> {
     logger.info(`Getting  ${todoId} from ${this.todosTable}`)
 
     const result = await this.docClient
       .get({
         TableName: this.todosTable,
         Key: {
+          userId,
           todoId
         }
       })
@@ -97,26 +98,33 @@ export class AccessTodos {
       .promise()
   }
 
-  async deleteTodoItem(todoId: string) {
+  async deleteTodoItem(userId: string, todoId: string) {
     logger.info(`Deleting ${todoId} from ${this.todosTable}`)
+    logger.info('userid is ' + userId + ' and todoID is ' + todoId)
 
     await this.docClient
       .delete({
         TableName: this.todosTable,
         Key: {
-          todoId
+          userId: userId,
+          todoId: todoId
         }
       })
       .promise()
   }
 
-  async updateAttachmentUrl(todoId: string, attachmentUrl: string) {
+  async updateAttachmentUrl(
+    userId: string,
+    todoId: string,
+    attachmentUrl: string
+  ) {
     logger.info(`Updating image URL for ${todoId} in ${this.todosTable}`)
 
     await this.docClient
       .update({
         TableName: this.todosTable,
         Key: {
+          userId,
           todoId
         },
         UpdateExpression: 'set attachmentUrl = :attachmentUrl',
